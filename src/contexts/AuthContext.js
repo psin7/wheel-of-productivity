@@ -29,10 +29,15 @@ export function AuthProvider({ children }) {
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
+      // Get the current URL for proper redirection in both dev and production
+      const redirectUrl = window.location.href.includes('localhost')
+        ? window.location.origin
+        : 'https://productivity-wheel.vercel.app';
+        
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
         },
       });
       
