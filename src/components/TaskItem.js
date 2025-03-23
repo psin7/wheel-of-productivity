@@ -2,6 +2,35 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { FaTrash, FaCheck } from 'react-icons/fa';
+import { supabase } from '../supabase';
+
+// Helper function to format time in minutes to appropriate units
+const formatTime = (minutes, preferredUnit = null) => {
+  if (!minutes && minutes !== 0) return '';
+  
+  // If we have a preferred display unit, use it
+  if (preferredUnit) {
+    switch (preferredUnit) {
+      case 'hours':
+        return `${Math.round(minutes / 60 * 10) / 10} hours`;
+      case 'days':
+        return `${Math.round(minutes / (24 * 60) * 10) / 10} days`;
+      default: // minutes
+        return `${minutes} minutes`;
+    }
+  }
+  
+  // Otherwise, choose the most appropriate unit
+  if (minutes >= 24 * 60) {
+    const days = Math.round(minutes / (24 * 60) * 10) / 10;
+    return `${days} ${days === 1 ? 'day' : 'days'}`;
+  } else if (minutes >= 60) {
+    const hours = Math.round(minutes / 60 * 10) / 10;
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  } else {
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+  }
+};
 
 const TaskItem = ({ task, onComplete, onDelete }) => {
   return (
@@ -19,8 +48,10 @@ const TaskItem = ({ task, onComplete, onDelete }) => {
       <TaskContent>
         <TaskTitle>{task.title}</TaskTitle>
         <TaskDetails>
-          {task.time && <TaskTime>⏰ {task.time}</TaskTime>}
-          {task.goalCategory && <TaskCategory>{task.goalCategory}</TaskCategory>}
+          {task.time_minutes > 0 && (
+            <TaskTime>⏰ {formatTime(task.time_minutes, task.display_unit)}</TaskTime>
+          )}
+          {task.goal && <TaskCategory>{task.goal}</TaskCategory>}
         </TaskDetails>
       </TaskContent>
       <TaskActions>

@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../supabase';
+import { FaClock } from 'react-icons/fa';
 
 const TaskForm = ({ onAddTask, activeGoal }) => {
   const [title, setTitle] = useState('');
-  const [time, setTime] = useState('');
+  const [timeValue, setTimeValue] = useState('');
+  const [timeUnit, setTimeUnit] = useState('minutes');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -16,18 +19,44 @@ const TaskForm = ({ onAddTask, activeGoal }) => {
       return;
     }
     
+    // Create a new task with UUID
+    const taskId = uuidv4();
+    
+    // Parse time value as integer if provided
+    let timeInMinutes = null;
+    if (timeValue && !isNaN(timeValue) && parseInt(timeValue) > 0) {
+      const value = parseInt(timeValue);
+      
+      // Convert all time units to minutes for storage
+      switch (timeUnit) {
+        case 'hours':
+          timeInMinutes = value * 60;
+          break;
+        case 'days':
+          timeInMinutes = value * 24 * 60;
+          break;
+        default: // minutes
+          timeInMinutes = value;
+      }
+    }
+    
     const newTask = {
-      id: uuidv4(),
+      id: taskId,
       title: title.trim(),
-      time: time.trim() || null,
-      goalCategory: activeGoal,
+      time_minutes: timeInMinutes, // Store everything in minutes
+      display_unit: timeValue ? timeUnit : null, // Store display preference
+      goal: activeGoal,
       completed: false,
-      createdAt: new Date().toISOString()
+      created_at: new Date().toISOString()
     };
     
+    // Add task to local state via the callback
     onAddTask(newTask);
+    
+    // Reset form
     setTitle('');
-    setTime('');
+    setTimeValue('');
+    setTimeUnit('minutes');
     setError('');
   };
 
@@ -51,12 +80,27 @@ const TaskForm = ({ onAddTask, activeGoal }) => {
         </InputGroup>
         <InputGroup>
           <Label>Time (optional)</Label>
-          <Input
-            type="text"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            placeholder="e.g. 30 mins, 2 hours..."
-          />
+          <TimeInputContainer>
+            <TimeInputWrapper>
+              <TimeInput
+                type="number"
+                min="1"
+                max="999"
+                value={timeValue}
+                onChange={(e) => setTimeValue(e.target.value)}
+                placeholder="Amount"
+              />
+              <TimeUnitSelect
+                value={timeUnit}
+                onChange={(e) => setTimeUnit(e.target.value)}
+              >
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+                <option value="days">Days</option>
+              </TimeUnitSelect>
+            </TimeInputWrapper>
+            <TimeIcon><FaClock /></TimeIcon>
+          </TimeInputContainer>
         </InputGroup>
         <SubmitButton 
           type="submit"
@@ -134,6 +178,62 @@ const ErrorMessage = styled.p`
   font-size: 0.9rem;
   margin-bottom: 10px;
   text-align: center;
+`;
+
+const TimeInputContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const TimeInputWrapper = styled.div`
+  display: flex;
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--shadow-color);
+`;
+
+const TimeInput = styled.input`
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  outline: none;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(248, 200, 220, 0.3);
+  }
+  font-size: 0.9rem;
+  color: var(--text-color);
+  
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+`;
+
+const TimeUnitSelect = styled.select`
+  padding: 10px 15px;
+  border: none;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+`;
+
+const TimeIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 1.1rem;
 `;
 
 export default TaskForm;

@@ -2,12 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaskItem from './TaskItem';
+import { supabase } from '../supabase';
 
 const TaskList = ({ tasks, onCompleteTask, onDeleteTask, activeGoal }) => {
   // Filter tasks based on active goal
   const filteredTasks = activeGoal === 'All Goals' 
     ? tasks 
-    : tasks.filter(task => task.goalCategory === activeGoal);
+    : tasks.filter(task => task.goal === activeGoal);
 
   return (
     <ListContainer>

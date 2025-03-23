@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion, useAnimation } from 'framer-motion';
 import { FaRedo } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../supabase';
 
 const SpinWheel = ({ tasks }) => {
   const [selectedTask, setSelectedTask] = useState(null);
